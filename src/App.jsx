@@ -6,7 +6,7 @@ const audioMap = {
   "p-ssyclat.mp3": "P$SSYYCLATT!",
   "raasclaat.mp3": "RAASCLAAT!",
   "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3":
-    "RICH ----- MILLIONAIRE ----- EY ----- RICH ----- EY -------------- BOMMMMBAAACLAAATT ---— RICH ---— MILLIONAIRE -— EHE -— MILLIONAIRE — EHE"
+    "RICH ----- MILLIONAIRE ----- EY ----- RICH ----- EY -------------------- BBBOOOOOOOOMMMMMMBAAAAAACCCCLLLLLAAAAAAATT ----— RICH ---— MILLIONAIRE -— EHE -— MILLIONAIRE — EHE"
 };
 
 export default function BombaclatApp() {
@@ -61,7 +61,7 @@ export default function BombaclatApp() {
           }
         };
   
-        setTimeout(type, 200);
+        setTimeout(type, 50);
       }, 400);
     }, 400);
   };
