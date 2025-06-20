@@ -25,7 +25,9 @@ export default function BombaclatApp() {
     setIsPlaying(true);
 
     const randomThinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
+    const thinkingDelay = 600 + Math.random() * 400; // 600–1000ms
 
+    // Show thinking message after slight delay
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: randomThinking }]);
 
@@ -36,29 +38,31 @@ export default function BombaclatApp() {
       const chars = displayText.split("");
       let i = 0;
 
-      // Play audio immediately
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: "assistant", text: "", audio: `/${randomClip}` }
-      ]);
+      // Replace thinking with audio + start typing
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", text: "", audio: `/${randomClip}` }
+        ]);
 
-      const audio = new Audio(`/${randomClip}`);
-      audio.onended = () => setIsPlaying(false);
-      audio.play();
+        const audio = new Audio(`/${randomClip}`);
+        audio.onended = () => setIsPlaying(false);
+        audio.play();
 
-      const type = () => {
-        if (i < chars.length) {
-          currentText += chars[i++];
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { role: "assistant", text: currentText, audio: `/${randomClip}` }
-          ]);
-          setTimeout(type, 40);
-        }
-      };
+        const type = () => {
+          if (i < chars.length) {
+            currentText += chars[i++];
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", text: currentText, audio: `/${randomClip}` }
+            ]);
+            setTimeout(type, 40);
+          }
+        };
 
-      setTimeout(type, 100);
-    }, 600);
+        setTimeout(type, 100);
+      }, thinkingDelay);
+    }, 100);
   };
 
   return (
@@ -96,14 +100,14 @@ export default function BombaclatApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
-          // ✅ stays editable
+          // input stays editable
         />
         <button
           type="submit"
           className={`px-4 py-2 rounded-xl text-white ${
             isPlaying ? "bg-gray-400 cursor-not-allowed" : "bg-green-500"
           }`}
-          disabled={isPlaying} // ✅ only the button is disabled
+          disabled={isPlaying}
         >
           {isPlaying ? "Wait..." : "Send"}
         </button>
