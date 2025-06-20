@@ -18,7 +18,7 @@ export default function BombaclatApp() {
 
   const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isPlaying) return;
 
@@ -39,29 +39,38 @@ export default function BombaclatApp() {
       let currentText = "";
       let i = 0;
 
-      setTimeout(() => {
-        // Set current audio so <audio> element plays it
-        setCurrentAudio(`/${randomClip}`);
-
-        // Replace "thinking" with blank assistant bubble and audio
+      setTimeout(async () => {
+        // Replace "thinking" with empty bubble and set audio
         setMessages((prev) => [
           ...prev.slice(0, -1),
           { role: "assistant", text: "", audio: `/${randomClip}` }
         ]);
+        setCurrentAudio(`/${randomClip}`);
 
-        // Start typing shortly after triggering audio
-        const type = () => {
-          if (i < chars.length) {
-            currentText += chars[i++];
-            setMessages((prev) => [
-              ...prev.slice(0, -1),
-              { role: "assistant", text: currentText, audio: `/${randomClip}` }
-            ]);
-            setTimeout(type, 40);
+        // Wait for <audio> to render and play
+        setTimeout(async () => {
+          try {
+            await audioRef.current?.play();
+          } catch (err) {
+            console.error("Audio play failed:", err);
+            setIsPlaying(false);
+            return;
           }
-        };
 
-        setTimeout(type, 100);
+          // Start typing after audio begins
+          const type = () => {
+            if (i < chars.length) {
+              currentText += chars[i++];
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { role: "assistant", text: currentText, audio: `/${randomClip}` }
+              ]);
+              setTimeout(type, 40);
+            }
+          };
+
+          setTimeout(type, 40);
+        }, 0);
       }, thinkingDelay);
     }, 100);
   };
@@ -84,12 +93,11 @@ export default function BombaclatApp() {
             }`}
           >
             <p className="text-sm mb-1">{msg.text}</p>
-            {/* Audio only rendered on last message to control exact start */}
             {idx === messages.length - 1 && msg.audio && (
               <audio
                 ref={audioRef}
                 src={currentAudio}
-                autoPlay
+                preload="auto"
                 className="hidden"
                 onEnded={() => setIsPlaying(false)}
               />
