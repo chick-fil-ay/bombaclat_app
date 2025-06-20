@@ -6,65 +6,66 @@ const audioMap = {
   "p-ssyclat.mp3": "P$SSYYCLATT!",
   "raasclaat.mp3": "RAASCLAAT!",
   "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3":
-    "RICH ----- MILLIONAIRE ----- EY ----- RICH ----- EY -------------------- BBBOOOOOOOOMMMMMMBAAAAAACCCCLLLLLAAAAAAATT ----— RICH ---— MILLIONAIRE -— EHE -— MILLIONAIRE — EHE"
+    "RICH ----- MILLIONAIRE ----- EY ----- RICH ----- EY ------------------------------ BBBOOOOOOOOMMMMMMBAAAAAACCCCLLLLLAAAAAAATT ----— RICH ---— MILLIONAIRE -— EHE -— MILLIONAIRE — EHE"
 };
 
 export default function BombaclatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false); // NEW
 
-  const thinkingPhrases = [
-    "...",
-    "Hmm...",
-    "Thinking...",
-    "Wait a sec...",
-    "🤔"
-  ];
-  
+  const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-  
+    if (!input.trim() || isPlaying) return;
+
     // Add user message
     setMessages((prev) => [...prev, { role: "user", text: input }]);
     setInput("");
-  
-    // Simulate assistant "thinking..."
+
+    // Block new input
+    setIsPlaying(true);
+
     const randomThinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
-  
+
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: randomThinking }]);
-  
+
       const clipKeys = Object.keys(audioMap);
       const randomClip = clipKeys[Math.floor(Math.random() * clipKeys.length)];
       const displayText = audioMap[randomClip];
       let currentText = "";
       const chars = displayText.split("");
       let i = 0;
-  
-      // Immediately replace thinking with audio + empty text
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "assistant", text: "", audio: `/${randomClip}` }
-        ]);
-  
-        // Then type out the response letter by letter
-        const type = () => {
-          if (i < chars.length) {
-            currentText += chars[i++];
-            setMessages((prev) => [
-              ...prev.slice(0, -1),
-              { role: "assistant", text: currentText, audio: `/${randomClip}` }
-            ]);
-            setTimeout(type, 40);
-          }
-        };
-  
-        setTimeout(type, 50);
-      }, 400);
-    }, 400);
+
+      // Play audio IMMEDIATELY
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "assistant", text: "", audio: `/${randomClip}` }
+      ]);
+
+      // Release input when audio ends (once)
+      const audio = new Audio(`/${randomClip}`);
+      audio.onended = () => setIsPlaying(false); // Re-enable input
+      audio.play();
+
+      // Typing effect begins shortly after audio starts
+      const type = () => {
+        if (i < chars.length) {
+          currentText += chars[i++];
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { role: "assistant", text: currentText, audio: `/${randomClip}` }
+          ]);
+          setTimeout(type, 40);
+        }
+      };
+
+      setTimeout(type, 100); // start typing after short delay
+    }, 200); // quick delay for thinking phrase
   };
+
   return (
     <div className="flex flex-col min-h-[100dvh] bg-neutral-100">
       <header className="p-4 border-b bg-white shadow flex items-center space-x-3">
@@ -100,12 +101,16 @@ export default function BombaclatApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
+          disabled={isPlaying}
         />
         <button
           type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded-xl"
+          className={`px-4 py-2 rounded-xl text-white ${
+            isPlaying ? "bg-gray-400 cursor-not-allowed" : "bg-green-500"
+          }`}
+          disabled={isPlaying}
         >
-          Send
+          {isPlaying ? "Wait..." : "Send"}
         </button>
       </form>
     </div>
