@@ -2,10 +2,10 @@ import { useState, useRef } from "react";
 
 const audioMap = {
   "bomboclaat_1.m4a": "BBBBBOOOOOMMMMMBBBBBOOOOOCCCCCLLLLAAAAATTTTT!",
-  "bomboclaat_2.m4a": "BOOMBOOOCLATT!",
+  "bomboclaat_2.m4a": "BOOMBOOCLATT!",
   "p-ssyclat.mp3": "P$SSYYCLATT!",
   "raasclaat.mp3": "RAASCLAAT!",
-  "millionaire_ehe.m4a": "MILLIONAIRE - EHE!",
+  "millionaire_ehe.m4a": "MILLIONAIRE!",
   "RICH.m4a": "RIICH!"
 };
 
