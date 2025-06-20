@@ -1,14 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 
-const audioClips = [
-  { file: "bomboclat_1.mp3", text: "BOMBAACLATT!" },
-  { file: "bomboclaat_2.mp3", text: "BOOMBAACLATT!" },
-  { file: "p-ssyclat.mp3", text: "P$$$YYCLATT!" },
-  { file: "raasclaat.mp3", text: "RAASCLAAT!" },
+const clips = [
+  {
+    file: "bomboclat_1.mp3",
+    text: "BOMBAACLATT!",
+  },
+  {
+    file: "bomboclat_2.mp3",
+    text: "BOOMBAACLATT!",
+  },
+  {
+    file: "p-ssyclat.mp3",
+    text: "P$$SYYCLATT!",
+  },
+  {
+    file: "raasclaat.mp3",
+    text: "RAASCLAAT!",
+  },
   {
     file: "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3",
-    text: "RICH -- MILLIONAIRE -- EY -- RICH-- EY -- BOMMMMBAAACLAAATT - RICH -- MILLIONAIRE  - EHE - MILLIONAIRE - ehe"
-  }
+    text: "RICH -- MILLIONAIRE -- EY -- RICH-- EY -- BOMMMMBAAACLAAATT - RICH -- MILLIONAIRE  - EHE - MILLIONAIRE - ehe",
+  },
 ];
 
 export default function BombaclatApp() {
@@ -21,58 +33,56 @@ export default function BombaclatApp() {
     e.preventDefault();
     if (!input.trim() || isThinking) return;
 
-    const userMessage = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, { role: "user", text: input }]);
     setInput("");
-
     setIsThinking(true);
-    const thinkingChance = Math.random() < 0.7;
-    if (thinkingChance) {
+
+    const showThinking = Math.random() < 0.6;
+    if (showThinking) {
       setMessages((prev) => [...prev, { role: "assistant", text: "Thinking..." }]);
-      await new Promise((res) => setTimeout(res, 800 + Math.random() * 1000));
+      await new Promise((res) => setTimeout(res, 1000 + Math.random() * 1000));
       setMessages((prev) => prev.slice(0, -1));
     }
 
-    const numResponses = Math.ceil(Math.random() * 3);
-    const clips = Array.from({ length: numResponses }, () =>
-      audioClips[Math.floor(Math.random() * audioClips.length)]
+    const howMany = Math.floor(Math.random() * 3) + 1;
+    const selected = Array.from({ length: howMany }, () =>
+      clips[Math.floor(Math.random() * clips.length)]
     );
 
-    for (let clip of clips) {
+    for (let i = 0; i < selected.length; i++) {
+      const { file, text } = selected[i];
+
+      setMessages((prev) => [...prev, { role: "assistant", text: "", audio: `/${file}` }]);
+
+      // Simultaneous audio + text typing
+      const chars = text.split("");
+      let currentText = "";
+      let j = 0;
+
+      const audio = new Audio(`/${file}`);
+      audioRef.current = audio;
+      audio.play();
+
+      const type = () => {
+        if (j < chars.length) {
+          currentText += chars[j++];
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              text: currentText,
+            };
+            return updated;
+          });
+          setTimeout(type, 40);
+        }
+      };
+
+      type();
+
+      // Wait for audio to finish before next
       await new Promise((res) => {
-        // Add placeholder to trigger audio
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", text: "", audio: `/${clip.file}` }
-        ]);
-
-        // Play audio
-        const audio = new Audio(`/${clip.file}`);
-        audioRef.current = audio;
-        audio.play();
-
-        audio.onended = () => res();
-      });
-
-      await new Promise((res) => {
-        let i = 0;
-        let currentText = "";
-        const chars = clip.text.split("");
-
-        const type = () => {
-          if (i < chars.length) {
-            currentText += chars[i++];
-            setMessages((prev) => [
-              ...prev.slice(0, -1),
-              { role: "assistant", text: currentText, audio: `/${clip.file}` }
-            ]);
-            setTimeout(type, 40);
-          } else {
-            res();
-          }
-        };
-
-        setTimeout(type, 100);
+        audio.onended = res;
       });
     }
 
@@ -89,9 +99,11 @@ export default function BombaclatApp() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`max-w-md p-3 rounded-2xl shadow whitespace-pre-wrap ${msg.role === "user"
-              ? "bg-white self-end ml-auto"
-              : "bg-green-100 self-start"}`}
+            className={`max-w-md p-3 rounded-2xl shadow whitespace-pre-wrap ${
+              msg.role === "user"
+                ? "bg-white self-end ml-auto"
+                : "bg-green-100 self-start"
+            }`}
           >
             <p className="text-sm mb-1">{msg.text}</p>
             {msg.audio && (
@@ -114,9 +126,7 @@ export default function BombaclatApp() {
         <button
           type="submit"
           className={`px-4 py-2 rounded-xl text-white ${
-            isThinking
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600"
+            isThinking ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
           }`}
           disabled={isThinking}
         >
