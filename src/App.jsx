@@ -33,7 +33,12 @@ export default function BombaclatApp() {
           >
             <p className="text-sm mb-1">{msg.text}</p>
             {msg.audio && (
-              <audio controls src={msg.audio} className="mt-2 w-full" />
+            <audio
+              autoPlay
+              controls
+              src={msg.audio}
+              className="mt-2 w-full"
+            />
             )}
           </div>
         ))}
