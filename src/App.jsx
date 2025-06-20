@@ -27,9 +27,9 @@ export default function BombaclatApp() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={\`max-w-md p-3 rounded-2xl shadow \${msg.role === "user"
+            className={`max-w-md p-3 rounded-2xl shadow ${msg.role === "user"
               ? "bg-white self-end ml-auto"
-              : "bg-green-100 self-start"}\`}
+              : "bg-green-100 self-start"}`}
           >
             <p className="text-sm mb-1">{msg.text}</p>
             {msg.audio && (
