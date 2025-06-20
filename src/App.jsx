@@ -1,96 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const audioMap = {
-  "bomboclaat_1.mp3": "BOMBAACLATT!",
-  "bomboclaat_2.mp3": "BOOMBAACLATT!",
-  "p-ssyclat.mp3": "P$SSYYCLATT!",
-  "raasclaat.mp3": "RAASCLAAT!",
-  "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3":
-    "RICH -- MILLIONAIRE -- EY -- RICH -- EY -- BOMMMMBAAACLAAATT — RICH — MILLIONAIRE — EHE — MILLIONAIRE — ehe"
-};
+const audioClips = [
+  { file: "bomboclat_1.mp3", text: "BOMBAACLATT!" },
+  { file: "bomboclaat_2.mp3", text: "BOOMBAACLATT!" },
+  { file: "p-ssyclat.mp3", text: "P$$$YYCLATT!" },
+  { file: "raasclaat.mp3", text: "RAASCLAAT!" },
+  {
+    file: "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3",
+    text: "RICH -- MILLIONAIRE -- EY -- RICH-- EY -- BOMMMMBAAACLAAATT - RICH -- MILLIONAIRE  - EHE - MILLIONAIRE - ehe"
+  }
+];
 
-const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
-
-export default function PagoGPTApp() {
+export default function BombaclatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [isResponding, setIsResponding] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const audioRef = useRef(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || isResponding) return;
+    if (!input.trim() || isThinking) return;
 
-    setIsResponding(true);
-    const userMsg = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMessage = { role: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    const thinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
-    setMessages((prev) => [...prev, { role: "assistant", text: thinking }]);
+    setIsThinking(true);
+    const thinkingChance = Math.random() < 0.7;
+    if (thinkingChance) {
+      setMessages((prev) => [...prev, { role: "assistant", text: "Thinking..." }]);
+      await new Promise((res) => setTimeout(res, 800 + Math.random() * 1000));
+      setMessages((prev) => prev.slice(0, -1));
+    }
 
-    setTimeout(() => {
-      const clipKeys = Object.keys(audioMap);
-      const count = Math.floor(Math.random() * 3) + 1;
-      const selected = Array.from({ length: count }, () =>
-        clipKeys[Math.floor(Math.random() * clipKeys.length)]
-      );
+    const numResponses = Math.ceil(Math.random() * 3);
+    const clips = Array.from({ length: numResponses }, () =>
+      audioClips[Math.floor(Math.random() * audioClips.length)]
+    );
 
-      const responses = [...selected];
-      let i = 0;
+    for (let clip of clips) {
+      await new Promise((res) => {
+        // Add placeholder to trigger audio
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: "", audio: `/${clip.file}` }
+        ]);
 
-      const next = () => {
-        if (i >= responses.length) {
-          setIsResponding(false);
-          return;
-        }
-
-        const clip = responses[i];
-        const displayText = audioMap[clip];
-
-        const audio = new Audio(`/${clip}`);
+        // Play audio
+        const audio = new Audio(`/${clip.file}`);
+        audioRef.current = audio;
         audio.play();
 
-        let j = 0;
-        let currText = "";
+        audio.onended = () => res();
+      });
+
+      await new Promise((res) => {
+        let i = 0;
+        let currentText = "";
+        const chars = clip.text.split("");
 
         const type = () => {
-          if (j < displayText.length) {
-            currText += displayText[j++];
-            if (i === 0) {
-              setMessages((prev) => [
-                ...prev.slice(0, -1),
-                { role: "assistant", text: currText, audio: `/${clip}` }
-              ]);
-            } else {
-              setMessages((prev) => [
-                ...prev,
-                { role: "assistant", text: currText, audio: `/${clip}` }
-              ]);
-            }
+          if (i < chars.length) {
+            currentText += chars[i++];
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", text: currentText, audio: `/${clip.file}` }
+            ]);
             setTimeout(type, 40);
           } else {
-            i++;
-            setTimeout(next, 400);
+            res();
           }
         };
 
-        if (i === 0) {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { role: "assistant", text: "", audio: `/${clip}` }
-          ]);
-        } else {
-          setMessages((prev) => [
-            ...prev,
-            { role: "assistant", text: "", audio: `/${clip}` }
-          ]);
-        }
+        setTimeout(type, 100);
+      });
+    }
 
-        setTimeout(type, 300);
-      };
-
-      next();
-    }, 700);
+    setIsThinking(false);
   };
 
   return (
@@ -99,21 +85,21 @@ export default function PagoGPTApp() {
         <img src="/pago.png" alt="pagoGPT logo" className="h-8 w-8 rounded" />
         <h1 className="text-lg font-semibold">pagoGPT</h1>
       </header>
-
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`max-w-md p-3 rounded-2xl shadow ${
-              msg.role === "user" ? "bg-white self-end ml-auto" : "bg-green-100 self-start"
-            }`}
+            className={`max-w-md p-3 rounded-2xl shadow whitespace-pre-wrap ${msg.role === "user"
+              ? "bg-white self-end ml-auto"
+              : "bg-green-100 self-start"}`}
           >
-            <p className="text-sm mb-1 whitespace-pre-wrap">{msg.text}</p>
-            {msg.audio && <audio autoPlay src={msg.audio} className="hidden" />}
+            <p className="text-sm mb-1">{msg.text}</p>
+            {msg.audio && (
+              <audio autoPlay src={msg.audio} className="hidden" />
+            )}
           </div>
         ))}
       </div>
-
       <form
         onSubmit={handleSubmit}
         className="p-4 border-t bg-white flex items-center"
@@ -124,14 +110,17 @@ export default function PagoGPTApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
-          disabled={isResponding}
         />
         <button
           type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded-xl disabled:opacity-50"
-          disabled={isResponding}
+          className={`px-4 py-2 rounded-xl text-white ${
+            isThinking
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-600"
+          }`}
+          disabled={isThinking}
         >
-          Send
+          {isThinking ? "..." : "Send"}
         </button>
       </form>
     </div>
