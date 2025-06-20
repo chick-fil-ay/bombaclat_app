@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const audioMap = {
   "bomboclaat_1.mp3": "BOMBAACLATT!",
@@ -9,51 +9,87 @@ const audioMap = {
     "RICH -- MILLIONAIRE -- EY -- RICH -- EY -- BOMMMMBAAACLAAATT — RICH — MILLIONAIRE — EHE — MILLIONAIRE — ehe"
 };
 
-export default function BombaclatApp() {
+const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
+
+export default function PagoGPTApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [isResponding, setIsResponding] = useState(false);
+  const audioRefs = useRef([]);
+
+  const playSequentialAudio = async (clips, onDone) => {
+    for (let clip of clips) {
+      const audio = new Audio(`/${clip}`);
+      await new Promise((res) => {
+        audio.onended = res;
+        audio.play();
+      });
+    }
+    onDone();
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isResponding) return;
 
-    // Add user message
-    setMessages((prev) => [...prev, { role: "user", text: input }]);
+    setIsResponding(true);
+    const userMsg = { role: "user", text: input };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    // Simulate assistant "thinking..."
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "assistant", text: "…" }]);
+    // Show thinking message first
+    const thinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
+    setMessages((prev) => [...prev, { role: "assistant", text: thinking }]);
 
+    setTimeout(() => {
       const clipKeys = Object.keys(audioMap);
-      const randomClip = clipKeys[Math.floor(Math.random() * clipKeys.length)];
-      const displayText = audioMap[randomClip];
-      let currentText = "";
-      const chars = displayText.split("");
+      const count = Math.floor(Math.random() * 3) + 1;
+      const selected = Array.from({ length: count }, () =>
+        clipKeys[Math.floor(Math.random() * clipKeys.length)]
+      );
+
+      const responses = [...selected];
       let i = 0;
 
-      // Immediately replace "..." with audio + empty text
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "assistant", text: "", audio: `/${randomClip}` }
-        ]);
+      const next = () => {
+        if (i >= responses.length) {
+          setIsResponding(false);
+          return;
+        }
 
-        // Then type out the response letter by letter
+        const clip = responses[i];
+        const displayText = audioMap[clip];
+
+        // Start audio immediately and then start typing
+        const audio = new Audio(`/${clip}`);
+        audio.play();
+
+        let j = 0;
+        let currText = "";
         const type = () => {
-          if (i < chars.length) {
-            currentText += chars[i++];
+          if (j < displayText.length) {
+            currText += displayText[j++];
             setMessages((prev) => [
               ...prev.slice(0, -1),
-              { role: "assistant", text: currentText, audio: `/${randomClip}` }
+              { role: "assistant", text: currText, audio: `/${clip}` }
             ]);
-            setTimeout(type, 40); // typing speed
+            setTimeout(type, 40);
+          } else {
+            i++;
+            setTimeout(next, 400);
           }
         };
 
-        setTimeout(type, 200); // short pause before typing starts
-      }, 400); // delay before replacing "..." with audio
-    }, 400); // delay after user input before "..." appears
+        // Replace thinking message with empty assistant message
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", text: "", audio: `/${clip}` }
+        ]);
+        setTimeout(type, 300);
+      };
+
+      next();
+    }, 700);
   };
 
   return (
@@ -67,16 +103,12 @@ export default function BombaclatApp() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`max-w-md p-3 rounded-2xl shadow whitespace-pre-wrap ${
-              msg.role === "user"
-                ? "bg-white self-end ml-auto"
-                : "bg-green-100 self-start"
+            className={`max-w-md p-3 rounded-2xl shadow ${
+              msg.role === "user" ? "bg-white self-end ml-auto" : "bg-green-100 self-start"
             }`}
           >
-            <p className="text-sm mb-1">{msg.text}</p>
-            {msg.audio && (
-              <audio autoPlay src={msg.audio} className="hidden" />
-            )}
+            <p className="text-sm mb-1 whitespace-pre-wrap">{msg.text}</p>
+            {msg.audio && <audio autoPlay src={msg.audio} className="hidden" />}
           </div>
         ))}
       </div>
@@ -91,10 +123,12 @@ export default function BombaclatApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
+          disabled={isResponding}
         />
         <button
           type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded-xl"
+          className="bg-green-500 text-white px-4 py-2 rounded-xl disabled:opacity-50"
+          disabled={isResponding}
         >
           Send
         </button>
