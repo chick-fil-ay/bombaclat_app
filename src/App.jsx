@@ -35,9 +35,8 @@ export default function BombaclatApp() {
             {msg.audio && (
             <audio
               autoPlay
-              controls
               src={msg.audio}
-              className="mt-2 w-full"
+              className="hidden"
             />
             )}
           </div>
