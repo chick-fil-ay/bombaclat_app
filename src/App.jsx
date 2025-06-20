@@ -1,12 +1,13 @@
 import { useState } from "react";
 
-const audioClips = [
-  "bomboclat_1.mp3",
-  "bomboclaat_2.mp3",
-  "p-ssyclat.mp3",
-  "raasclaat.mp3",
-  "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3"
-];
+const audioMap = {
+  "bomboclaat_1.mp3": "BOMBAACLATT!",
+  "bomboclaat_2.mp3": "BOOMBAACLATT!",
+  "p-ssyclat.mp3": "P$SSYYCLATT!",
+  "raasclaat.mp3": "RAASCLAAT!",
+  "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3":
+    "RICH -- MILLIONAIRE -- EY -- RICH -- EY -- BOMMMMBAAACLAAATT — RICH — MILLIONAIRE — EHE — MILLIONAIRE — ehe"
+};
 
 export default function BombaclatApp() {
   const [messages, setMessages] = useState([]);
@@ -24,8 +25,9 @@ export default function BombaclatApp() {
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: "…" }]);
 
-      const randomClip = audioClips[Math.floor(Math.random() * audioClips.length)];
-      const displayText = randomClip.replace(".mp3", "");
+      const clipKeys = Object.keys(audioMap);
+      const randomClip = clipKeys[Math.floor(Math.random() * clipKeys.length)];
+      const displayText = audioMap[randomClip];
       let currentText = "";
       const chars = displayText.split("");
       let i = 0;
