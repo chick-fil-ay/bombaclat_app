@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 const audioClips = [
-  "bomboclaat_1.mp3",
+  "bomboclat_1.mp3",
   "bomboclaat_2.mp3",
   "p-ssyclat.mp3",
   "raasclaat.mp3",
-  "rich millionaire ey rich ey BOMBACLAAT rich millionaire ehe millionaire ehe.mp3"
+  "rich millionaire ey rich ey BOMBAACLAAT rich millionaire ehe millionaire ehe.mp3"
 ];
 
 export default function BombaclatApp() {
@@ -26,31 +26,32 @@ export default function BombaclatApp() {
 
       const randomClip = audioClips[Math.floor(Math.random() * audioClips.length)];
       const displayText = randomClip.replace(".mp3", "");
-
-      // Typing effect
       let currentText = "";
       const chars = displayText.split("");
       let i = 0;
 
-      const type = () => {
-        if (i < chars.length) {
-          currentText += chars[i++];
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { role: "assistant", text: currentText }
-          ]);
-          setTimeout(type, 40); // typing speed
-        } else {
-          // Final message with audio
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { role: "assistant", text: displayText, audio: `/${randomClip}` }
-          ]);
-        }
-      };
+      // Immediately replace "..." with audio + empty text
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", text: "", audio: `/${randomClip}` }
+        ]);
 
-      setTimeout(type, 600); // delay after "..."
-    }, 400);
+        // Then type out the response letter by letter
+        const type = () => {
+          if (i < chars.length) {
+            currentText += chars[i++];
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", text: currentText, audio: `/${randomClip}` }
+            ]);
+            setTimeout(type, 40); // typing speed
+          }
+        };
+
+        setTimeout(type, 200); // short pause before typing starts
+      }, 400); // delay before replacing "..." with audio
+    }, 400); // delay after user input before "..." appears
   };
 
   return (
