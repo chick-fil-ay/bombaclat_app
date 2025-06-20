@@ -12,7 +12,7 @@ const audioMap = {
 export default function BombaclatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [isPlaying, setIsPlaying] = useState(false); // NEW
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
 
@@ -24,7 +24,6 @@ export default function BombaclatApp() {
     setMessages((prev) => [...prev, { role: "user", text: input }]);
     setInput("");
 
-    // Block new input
     setIsPlaying(true);
 
     const randomThinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
@@ -39,18 +38,16 @@ export default function BombaclatApp() {
       const chars = displayText.split("");
       let i = 0;
 
-      // Play audio IMMEDIATELY
+      // Play audio immediately
       setMessages((prev) => [
         ...prev.slice(0, -1),
         { role: "assistant", text: "", audio: `/${randomClip}` }
       ]);
 
-      // Release input when audio ends (once)
       const audio = new Audio(`/${randomClip}`);
-      audio.onended = () => setIsPlaying(false); // Re-enable input
+      audio.onended = () => setIsPlaying(false);
       audio.play();
 
-      // Typing effect begins shortly after audio starts
       const type = () => {
         if (i < chars.length) {
           currentText += chars[i++];
@@ -62,8 +59,8 @@ export default function BombaclatApp() {
         }
       };
 
-      setTimeout(type, 100); // start typing after short delay
-    }, 200); // quick delay for thinking phrase
+      setTimeout(type, 100);
+    }, 200);
   };
 
   return (
@@ -101,14 +98,14 @@ export default function BombaclatApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
-          disabled={isPlaying}
+          // ✅ stays editable
         />
         <button
           type="submit"
           className={`px-4 py-2 rounded-xl text-white ${
             isPlaying ? "bg-gray-400 cursor-not-allowed" : "bg-green-500"
           }`}
-          disabled={isPlaying}
+          disabled={isPlaying} // ✅ only the button is disabled
         >
           {isPlaying ? "Wait..." : "Send"}
         </button>
