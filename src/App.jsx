@@ -62,7 +62,7 @@ export default function BombaclatApp() {
         }
       };
 
-      setTimeout(type, 200); // start typing after short delay
+      setTimeout(type, 100); // start typing after short delay
     }, 200); // quick delay for thinking phrase
   };
 
