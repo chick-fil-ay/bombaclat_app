@@ -60,7 +60,7 @@ export default function BombaclatApp() {
       };
 
       setTimeout(type, 100);
-    }, 200);
+    }, 600);
   };
 
   return (
