@@ -22,7 +22,11 @@ export default function BombaclatApp() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-100">
+    <div className="flex flex-col min-h-[100dvh] bg-neutral-100">
+      <header className="p-4 border-b bg-white shadow flex items-center space-x-3">
+        <img src="/pago.png" alt="pagoGPT logo" className="h-8 w-8 rounded" />
+        <h1 className="text-lg font-semibold">pagoGPT</h1>
+      </header>
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div
