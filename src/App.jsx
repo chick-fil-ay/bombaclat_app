@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 
 const audioMap = {
   "bomboclaat_1.m4a": "BBBBBOOOOOMMMMMBBBBBAAAAACCCCCLLLLAAAAATTTTT!",
-  "bomboclaat_2.m4a": "BOOMBAACLATT!",
+  "bomboclaat_2.mp3": "BOOMBAACLATT!",
   "p-ssyclat.mp3": "P$SSYYCLATT!",
   "raasclaat.mp3": "RAASCLAAT!",
   "millionaire_ehe.m4a": "MILLIONAIRE - EHE!",
@@ -18,7 +18,7 @@ export default function BombaclatApp() {
 
   const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim() || isPlaying) return;
 
@@ -39,38 +39,29 @@ export default function BombaclatApp() {
       let currentText = "";
       let i = 0;
 
-      setTimeout(async () => {
-        // Replace "thinking" with empty bubble and set audio
+      setTimeout(() => {
+        // Set current audio so <audio> element plays it
+        setCurrentAudio(`/${randomClip}`);
+
+        // Replace "thinking" with blank assistant bubble and audio
         setMessages((prev) => [
           ...prev.slice(0, -1),
           { role: "assistant", text: "", audio: `/${randomClip}` }
         ]);
-        setCurrentAudio(`/${randomClip}`);
 
-        // Wait for <audio> to render and play
-        setTimeout(async () => {
-          try {
-            await audioRef.current?.play();
-          } catch (err) {
-            console.error("Audio play failed:", err);
-            setIsPlaying(false);
-            return;
+        // Start typing shortly after triggering audio
+        const type = () => {
+          if (i < chars.length) {
+            currentText += chars[i++];
+            setMessages((prev) => [
+              ...prev.slice(0, -1),
+              { role: "assistant", text: currentText, audio: `/${randomClip}` }
+            ]);
+            setTimeout(type, 40);
           }
+        };
 
-          // Start typing after audio begins
-          const type = () => {
-            if (i < chars.length) {
-              currentText += chars[i++];
-              setMessages((prev) => [
-                ...prev.slice(0, -1),
-                { role: "assistant", text: currentText, audio: `/${randomClip}` }
-              ]);
-              setTimeout(type, 40);
-            }
-          };
-
-          setTimeout(type, 40);
-        }, 0);
+        setTimeout(type, 100);
       }, thinkingDelay);
     }, 100);
   };
@@ -93,11 +84,12 @@ export default function BombaclatApp() {
             }`}
           >
             <p className="text-sm mb-1">{msg.text}</p>
+            {/* Audio only rendered on last message to control exact start */}
             {idx === messages.length - 1 && msg.audio && (
               <audio
                 ref={audioRef}
                 src={currentAudio}
-                preload="auto"
+                autoPlay
                 className="hidden"
                 onEnded={() => setIsPlaying(false)}
               />
