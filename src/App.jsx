@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 
 const audioMap = {
   "bomboclaat_1.mp3": "BOMBAACLATT!",
@@ -15,18 +15,6 @@ export default function PagoGPTApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isResponding, setIsResponding] = useState(false);
-  const audioRefs = useRef([]);
-
-  const playSequentialAudio = async (clips, onDone) => {
-    for (let clip of clips) {
-      const audio = new Audio(`/${clip}`);
-      await new Promise((res) => {
-        audio.onended = res;
-        audio.play();
-      });
-    }
-    onDone();
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -37,7 +25,6 @@ export default function PagoGPTApp() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    // Show thinking message first
     const thinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
     setMessages((prev) => [...prev, { role: "assistant", text: thinking }]);
 
@@ -60,19 +47,26 @@ export default function PagoGPTApp() {
         const clip = responses[i];
         const displayText = audioMap[clip];
 
-        // Start audio immediately and then start typing
         const audio = new Audio(`/${clip}`);
         audio.play();
 
         let j = 0;
         let currText = "";
+
         const type = () => {
           if (j < displayText.length) {
             currText += displayText[j++];
-            setMessages((prev) => [
-              ...prev.slice(0, -1),
-              { role: "assistant", text: currText, audio: `/${clip}` }
-            ]);
+            if (i === 0) {
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { role: "assistant", text: currText, audio: `/${clip}` }
+              ]);
+            } else {
+              setMessages((prev) => [
+                ...prev,
+                { role: "assistant", text: currText, audio: `/${clip}` }
+              ]);
+            }
             setTimeout(type, 40);
           } else {
             i++;
@@ -80,11 +74,18 @@ export default function PagoGPTApp() {
           }
         };
 
-        // Replace thinking message with empty assistant message
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "assistant", text: "", audio: `/${clip}` }
-        ]);
+        if (i === 0) {
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { role: "assistant", text: "", audio: `/${clip}` }
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", text: "", audio: `/${clip}` }
+          ]);
+        }
+
         setTimeout(type, 300);
       };
 
