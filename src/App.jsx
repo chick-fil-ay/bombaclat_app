@@ -1,10 +1,14 @@
 import { useState } from "react";
 
 const audioMap = {
-  "bomboclaat_1.mp3": "BOMBAACLATT!",
+  "bomboclaat_1.m4a": "BOMBAACLATT!",
   "bomboclaat_2.mp3": "BOOMBAACLATT!",
   "p-ssyclat.mp3": "P$SSYYCLATT!",
-  "raasclaat.mp3": "RAASCLAAT!"
+  "raasclaat.mp3": "RAASCLAAT!",
+  "bombaclat_rich.m4a": "BBBBOOOOMMMMBBBBAAAACCCCLLLLAAAATTTT RICH!",
+  "millionaire_ehe.m4a": "MILLIONAIRE - EHE!",
+  "RICH.m4a": "RICH!"
+
 };
 
 export default function BombaclatApp() {
