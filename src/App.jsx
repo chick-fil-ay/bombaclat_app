@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const audioMap = {
   "bomboclaat_1.m4a": "BBBBBOOOOOMMMMMBBBBBAAAAACCCCCLLLLAAAAATTTTT!",
@@ -7,13 +7,14 @@ const audioMap = {
   "raasclaat.mp3": "RAASCLAAT!",
   "millionaire_ehe.m4a": "MILLIONAIRE - EHE!",
   "RICH.m4a": "RIICH!"
-
 };
 
 export default function BombaclatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState(null);
+  const audioRef = useRef(null);
 
   const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
 
@@ -21,37 +22,34 @@ export default function BombaclatApp() {
     e.preventDefault();
     if (!input.trim() || isPlaying) return;
 
-    // Add user message
     setMessages((prev) => [...prev, { role: "user", text: input }]);
     setInput("");
-
     setIsPlaying(true);
 
     const randomThinking = thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)];
-    const thinkingDelay = 600 + Math.random() * 400; // 600–1000ms
+    const thinkingDelay = 600 + Math.random() * 400;
 
-    // Show thinking message after slight delay
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "assistant", text: randomThinking }]);
 
       const clipKeys = Object.keys(audioMap);
       const randomClip = clipKeys[Math.floor(Math.random() * clipKeys.length)];
       const displayText = audioMap[randomClip];
-      let currentText = "";
       const chars = displayText.split("");
+      let currentText = "";
       let i = 0;
 
-      // Replace thinking with audio + start typing
       setTimeout(() => {
+        // Set current audio so <audio> element plays it
+        setCurrentAudio(`/${randomClip}`);
+
+        // Replace "thinking" with blank assistant bubble and audio
         setMessages((prev) => [
           ...prev.slice(0, -1),
           { role: "assistant", text: "", audio: `/${randomClip}` }
         ]);
 
-        const audio = new Audio(`/${randomClip}`);
-        audio.onended = () => setIsPlaying(false);
-        audio.play();
-
+        // Start typing shortly after triggering audio
         const type = () => {
           if (i < chars.length) {
             currentText += chars[i++];
@@ -86,8 +84,15 @@ export default function BombaclatApp() {
             }`}
           >
             <p className="text-sm mb-1">{msg.text}</p>
-            {msg.audio && (
-              <audio autoPlay src={msg.audio} className="hidden" />
+            {/* Audio only rendered on last message to control exact start */}
+            {idx === messages.length - 1 && msg.audio && (
+              <audio
+                ref={audioRef}
+                src={currentAudio}
+                autoPlay
+                className="hidden"
+                onEnded={() => setIsPlaying(false)}
+              />
             )}
           </div>
         ))}
@@ -103,7 +108,6 @@ export default function BombaclatApp() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 border rounded-xl mr-2"
           placeholder="Type something..."
-          // input stays editable
         />
         <button
           type="submit"
