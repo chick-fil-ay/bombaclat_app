@@ -17,7 +17,7 @@ export default function BombaclatApp() {
   const [currentAudio, setCurrentAudio] = useState(null);
   const audioRef = useRef(null);
 
-  const thinkingPhrases = ["...", "Hmm...", "Thinking...", "Wait a sec...", "🤔"];
+  const thinkingPhrases = ["...", "Hmm...", "Thinnking...", "Wait a sec...", "🤔"];
 
   const handleSubmit = (e) => {
     e.preventDefault();
