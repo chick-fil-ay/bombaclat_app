@@ -6,7 +6,8 @@ const audioMap = {
   "p-ssyclat.mp3": "P$SSYYCLATT!",
   "raasclaat.mp3": "RAASCLAAT!",
   "millionaire_ehe.m4a": "MILLIONAIRE!",
-  "RICH.m4a": "RIICH!"
+  "RICH.m4a": "RIICH!",
+  "bombaclack.m4a": "Bombaclack, --- Bombaclack, --- Bombaclack"
 };
 
 export default function BombaclatApp() {
